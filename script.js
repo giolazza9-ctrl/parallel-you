@@ -19,6 +19,10 @@ const result = {
 let currentMode = "chaos";
 let currentPack = "life";
 let latestResult = null;
+let aiEnabled = true;
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const packs = {
   life: {
@@ -364,9 +368,37 @@ packButtons.forEach((button) => {
   });
 });
 
-generateDecisionButton.addEventListener("click", () => {
+generateDecisionButton.addEventListener("click", async () => {
   generateDecisionButton.disabled = true;
-  generatorStatus.textContent = "Consulting the tiny fake model...";
+  generatorStatus.textContent = "Consulting the AI oracle...";
+
+  if (aiEnabled && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    try {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-decision`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          Apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ decision: "", mode: currentMode }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.verdict) {
+          decisionInput.value = data.verdict;
+          decisionInput.focus();
+          generatorStatus.textContent = "AI generated a decision. The oracle has spoken.";
+          generateDecisionButton.disabled = false;
+          showToast("AI conjured a fresh dilemma from the void.");
+          return;
+        }
+      }
+    } catch {
+      // Fall through to local generation
+    }
+  }
 
   window.setTimeout(() => {
     const generated = createGeneratedDecision();
@@ -452,23 +484,38 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
   link.click();
 });
 
-function spin(decision) {
-  const matched = inferDecision(decision);
-  const verdict = matched.verdict;
-  const generated = {
-    decision,
-    verdict,
-    emotion: matched.emotion,
-    advice: matched.advice,
-    consequence: matched.consequence,
-    stats: createStats(decision, verdict),
-  };
+async function fetchAIDecision(decision) {
+  if (!aiEnabled || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
 
-  if (currentMode === "accurate") {
-    generated.stats = `${generated.stats} ${pick(accurateAddons)}`;
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-decision`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Apikey: SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ decision, mode: currentMode }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.error) return null;
+
+    return {
+      verdict: data.verdict,
+      emotion: data.emotion,
+      advice: data.advice,
+      consequence: data.consequence,
+      stats: data.stats,
+    };
+  } catch {
+    return null;
   }
+}
 
-  latestResult = generated;
+function spin(decision) {
   slotMachine.classList.remove("pulled");
   void slotMachine.offsetWidth;
   slotMachine.classList.add("pulled");
@@ -478,21 +525,59 @@ function spin(decision) {
     reel.querySelector("span").textContent = pickReelFiller(index);
   });
 
-  const values = [
-    titleCaseAction(verdict),
-    generated.emotion.split(" ").slice(0, 3).join(" "),
-    generated.advice.split(" ").slice(0, 3).join(" "),
-    `${Math.floor(Math.random() * 89) + 11}%`,
-  ];
+  const submitButton = form.querySelector(".primary-button");
+  submitButton.disabled = true;
 
-  reels.forEach((reel, index) => {
+  fetchAIDecision(decision).then((aiResult) => {
+    let generated;
+
+    if (aiResult) {
+      generated = {
+        decision,
+        verdict: aiResult.verdict,
+        emotion: aiResult.emotion,
+        advice: aiResult.advice,
+        consequence: aiResult.consequence,
+        stats: aiResult.stats,
+        fromAI: true,
+      };
+    } else {
+      const matched = inferDecision(decision);
+      generated = {
+        decision,
+        verdict: matched.verdict,
+        emotion: matched.emotion,
+        advice: matched.advice,
+        consequence: matched.consequence,
+        stats: createStats(decision, matched.verdict),
+      };
+    }
+
+    if (currentMode === "accurate" && !aiResult) {
+      generated.stats = `${generated.stats} ${pick(accurateAddons)}`;
+    }
+
+    latestResult = generated;
+
+    const values = [
+      titleCaseAction(generated.verdict),
+      generated.emotion.split(" ").slice(0, 3).join(" "),
+      generated.advice.split(" ").slice(0, 3).join(" "),
+      `${Math.floor(Math.random() * 89) + 11}%`,
+    ];
+
+    reels.forEach((reel, index) => {
+      window.setTimeout(() => {
+        reel.classList.remove("spinning");
+        reel.querySelector("span").textContent = values[index];
+      }, 720 + index * 310);
+    });
+
     window.setTimeout(() => {
-      reel.classList.remove("spinning");
-      reel.querySelector("span").textContent = values[index];
-    }, 720 + index * 310);
+      renderResult(generated);
+      submitButton.disabled = false;
+    }, 2050);
   });
-
-  window.setTimeout(() => renderResult(generated), 2050);
 }
 
 function pickReelFiller(index) {
@@ -519,6 +604,13 @@ function renderResult(data) {
   result.advice.textContent = data.advice;
   result.consequence.textContent = data.consequence;
   result.stats.textContent = data.stats;
+
+  const aiBadge = document.querySelector("#aiBadge");
+  if (data.fromAI) {
+    aiBadge.style.display = "inline-grid";
+  } else {
+    aiBadge.style.display = "none";
+  }
 }
 
 function formatShareText(data) {

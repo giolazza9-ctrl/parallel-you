@@ -512,6 +512,27 @@ input:focus {
   font-weight: 700;
 }
 
+.ai-badge {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #0a1a0a;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  animation: aiPulse 2s ease-in-out infinite;
+}
+
+@keyframes aiPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(74, 222, 128, 0.3); }
+  50% { box-shadow: 0 0 18px rgba(74, 222, 128, 0.6); }
+}
+
 .decision-echo {
   margin: 16px 0 22px;
   color: var(--soft-ink);
