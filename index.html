@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Life Decision Slot Machine</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="machine-panel" aria-labelledby="app-title">
+        <div class="brand-row">
+          <div>
+            <p class="eyebrow">Casino logic for serious overthinkers</p>
+            <h1 id="app-title">Life Decision Slot Machine</h1>
+            <div class="signal-row" aria-label="Product signals">
+              <span>Decision entropy</span>
+              <span>Premium chaos model</span>
+              <span>No refunds from fate</span>
+            </div>
+          </div>
+          <div class="jackpot-badge" aria-label="Current nonsense confidence">
+            <span>97%</span>
+            <small>nonsense confidence</small>
+          </div>
+        </div>
+
+        <form class="decision-form" id="decisionForm">
+          <label for="decisionInput">Decision</label>
+          <div class="input-row">
+            <input
+              id="decisionInput"
+              name="decision"
+              type="text"
+              maxlength="120"
+              placeholder="Should I quit my job?"
+              autocomplete="off"
+              required
+            />
+            <button class="primary-button" type="submit">
+              <span aria-hidden="true">SPIN</span>
+              Decide
+            </button>
+          </div>
+          <div class="generator-row">
+            <button class="ai-button" type="button" id="generateDecisionButton">
+              <span aria-hidden="true">AI</span>
+              Generate decision
+            </button>
+            <p id="generatorStatus">Summons a fresh dilemma from the premium chaos model.</p>
+          </div>
+        </form>
+
+        <div class="controls-grid" aria-label="Decision modes and packs">
+          <div class="control-block">
+            <span class="control-label">Mode</span>
+            <div class="segmented" role="group" aria-label="Prediction mode">
+              <button class="segment active" type="button" data-mode="chaos">Chaos</button>
+              <button class="segment" type="button" data-mode="accurate">Accurate+</button>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <span class="control-label">Decision pack</span>
+            <div class="pack-list" role="group" aria-label="Decision pack">
+              <button class="pack active" type="button" data-pack="life">Life</button>
+              <button class="pack" type="button" data-pack="relationships">Relationships</button>
+              <button class="pack" type="button" data-pack="money">Money</button>
+              <button class="pack" type="button" data-pack="gym">Gym</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="slot-machine" aria-live="polite">
+          <div class="machine-chrome">
+            <span>LD-777</span>
+            <span>House Edge: Emotionally Unclear</span>
+          </div>
+          <div class="slot-top">
+            <span class="light"></span>
+            <span class="light"></span>
+            <span class="light"></span>
+            <span class="light"></span>
+            <span class="light"></span>
+          </div>
+          <div class="reels" id="reels">
+            <div class="reel" data-reel="verdict"><span>ASK</span></div>
+            <div class="reel" data-reel="emotion"><span>THE</span></div>
+            <div class="reel" data-reel="chaos"><span>MACHINE</span></div>
+            <div class="reel" data-reel="stats"><span>NOW</span></div>
+          </div>
+          <div class="lever" aria-hidden="true">
+            <span></span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="result-panel" aria-labelledby="resultTitle">
+        <div class="result-card" id="resultCard">
+          <div class="result-head">
+            <div>
+              <p class="eyebrow">Freshly randomized wisdom</p>
+              <h2 id="resultTitle">Result waiting...</h2>
+            </div>
+            <span class="card-mark">777</span>
+          </div>
+          <p class="decision-echo" id="decisionEcho">Feed the machine a life choice.</p>
+
+          <dl class="result-list">
+            <div>
+              <dt>Emotional outcome</dt>
+              <dd id="emotionOutput">Mild anticipation with theatrical lighting.</dd>
+            </div>
+            <div>
+              <dt>Chaotic advice</dt>
+              <dd id="adviceOutput">Spin first. Interpret later.</dd>
+            </div>
+            <div>
+              <dt>Absurd consequence</dt>
+              <dd id="consequenceOutput">A stranger may respect your font choices.</dd>
+            </div>
+            <div>
+              <dt>Statistical nonsense justification</dt>
+              <dd id="statsOutput">0 out of 0 imaginary analysts object.</dd>
+            </div>
+          </dl>
+
+          <div class="action-row">
+            <button class="secondary-button" type="button" id="shareButton">Share card</button>
+            <button class="secondary-button" type="button" id="downloadButton">Download</button>
+          </div>
+        </div>
+
+        <div class="upgrade-strip">
+          <div>
+            <strong>Accurate+ mode</strong>
+            <span>Fake serious forecasts, velvet graphs, and one confident buzzword.</span>
+          </div>
+          <button type="button" id="upgradeButton">Unlock $4.99</button>
+        </div>
+      </aside>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <canvas id="shareCanvas" width="1200" height="1400" aria-hidden="true"></canvas>
+    <script src="script.js"></script>
+  </body>
+</html>
