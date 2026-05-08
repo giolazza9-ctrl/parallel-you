@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npx vite --host 0.0.0.0",
-    "start": "npx vite --host 0.0.0.0",
-    "build": "npx vite build",
-    "preview": "npx vite preview --host 0.0.0.0"
+    "dev": "npm install && vite --host 0.0.0.0",
+    "start": "npm run dev",
+    "build": "npm install && vite build",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
-    "vite": "^5.4.21"
+    "vite": "5.4.21"
   }
 }
