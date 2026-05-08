@@ -3,16 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Life Decision Slot Machine</title>
+    <title>FateSpin -- AI Decision Oracle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div class="ambient-glow" aria-hidden="true"></div>
+
+    <header class="top-bar">
+      <div class="logo-group">
+        <svg class="logo-icon" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <circle cx="24" cy="24" r="22" stroke="url(#logoGrad)" stroke-width="2.5" fill="none"/>
+          <path d="M24 6 L28 18 L24 14 L20 18 Z" fill="url(#logoGrad)"/>
+          <path d="M24 42 L20 30 L24 34 L28 30 Z" fill="url(#logoGrad)" opacity="0.6"/>
+          <path d="M6 24 L18 20 L14 24 L18 28 Z" fill="url(#logoGrad)" opacity="0.8"/>
+          <path d="M42 24 L30 28 L34 24 L30 20 Z" fill="url(#logoGrad)" opacity="0.5"/>
+          <circle cx="24" cy="24" r="5" fill="url(#logoGrad)"/>
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="48" y2="48">
+              <stop offset="0%" stop-color="#f3d99b"/>
+              <stop offset="100%" stop-color="#d8ae5e"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">FateSpin</span>
+      </div>
+      <div class="top-bar-right">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-label">Oracle Online</span>
+      </div>
+    </header>
+
     <main class="app-shell">
       <section class="machine-panel" aria-labelledby="app-title">
         <div class="brand-row">
           <div>
             <p class="eyebrow">Casino logic for serious overthinkers</p>
-            <h1 id="app-title">Life Decision Slot Machine</h1>
+            <h1 id="app-title">FateSpin</h1>
+            <p class="tagline">AI-Powered Decision Oracle</p>
             <div class="signal-row" aria-label="Product signals">
               <span>Decision entropy</span>
               <span>Premium chaos model</span>
@@ -26,7 +56,7 @@
         </div>
 
         <form class="decision-form" id="decisionForm">
-          <label for="decisionInput">Decision</label>
+          <label for="decisionInput">What's your question?</label>
           <div class="input-row">
             <input
               id="decisionInput"
@@ -44,10 +74,12 @@
           </div>
           <div class="generator-row">
             <button class="ai-button" type="button" id="generateDecisionButton">
-              <span aria-hidden="true">AI</span>
+              <span class="ai-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15 9H9L12 2Z"/><path d="M12 22L9 15H15L12 22Z"/><path d="M2 12L9 9V15L2 12Z"/><path d="M22 12L15 15V9L22 12Z"/></svg>
+              </span>
               Generate decision
             </button>
-            <p id="generatorStatus">Summons a fresh dilemma from the premium chaos model.</p>
+            <p id="generatorStatus">Summons a fresh dilemma from the AI oracle.</p>
           </div>
         </form>
 
@@ -73,10 +105,12 @@
 
         <div class="slot-machine" aria-live="polite">
           <div class="machine-chrome">
-            <span>LD-777</span>
+            <span>FS-777</span>
             <span>House Edge: Emotionally Unclear</span>
           </div>
           <div class="slot-top">
+            <span class="light"></span>
+            <span class="light"></span>
             <span class="light"></span>
             <span class="light"></span>
             <span class="light"></span>
@@ -86,7 +120,7 @@
           <div class="reels" id="reels">
             <div class="reel" data-reel="verdict"><span>ASK</span></div>
             <div class="reel" data-reel="emotion"><span>THE</span></div>
-            <div class="reel" data-reel="chaos"><span>MACHINE</span></div>
+            <div class="reel" data-reel="chaos"><span>FATE</span></div>
             <div class="reel" data-reel="stats"><span>NOW</span></div>
           </div>
           <div class="lever" aria-hidden="true">
@@ -102,33 +136,53 @@
               <p class="eyebrow">Freshly randomized wisdom</p>
               <h2 id="resultTitle">Result waiting...</h2>
             </div>
-            <span class="card-mark">777</span>
-            <span class="ai-badge" id="aiBadge" style="display:none;">AI</span>
+            <div class="result-badges">
+              <span class="card-mark">777</span>
+              <span class="ai-badge" id="aiBadge" style="display:none;">AI</span>
+            </div>
           </div>
-          <p class="decision-echo" id="decisionEcho">Feed the machine a life choice.</p>
+          <p class="decision-echo" id="decisionEcho">Feed the oracle a life choice.</p>
 
           <dl class="result-list">
-            <div>
-              <dt>Emotional outcome</dt>
+            <div class="result-item">
+              <dt>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                Emotional outcome
+              </dt>
               <dd id="emotionOutput">Mild anticipation with theatrical lighting.</dd>
             </div>
-            <div>
-              <dt>Chaotic advice</dt>
+            <div class="result-item">
+              <dt>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                Chaotic advice
+              </dt>
               <dd id="adviceOutput">Spin first. Interpret later.</dd>
             </div>
-            <div>
-              <dt>Absurd consequence</dt>
+            <div class="result-item">
+              <dt>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Absurd consequence
+              </dt>
               <dd id="consequenceOutput">A stranger may respect your font choices.</dd>
             </div>
-            <div>
-              <dt>Statistical nonsense justification</dt>
+            <div class="result-item">
+              <dt>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                Statistical nonsense
+              </dt>
               <dd id="statsOutput">0 out of 0 imaginary analysts object.</dd>
             </div>
           </dl>
 
           <div class="action-row">
-            <button class="secondary-button" type="button" id="shareButton">Share card</button>
-            <button class="secondary-button" type="button" id="downloadButton">Download</button>
+            <button class="secondary-button" type="button" id="shareButton">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share
+            </button>
+            <button class="secondary-button" type="button" id="downloadButton">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Download
+            </button>
           </div>
         </div>
 

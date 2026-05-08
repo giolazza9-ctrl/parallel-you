@@ -453,7 +453,7 @@ document.querySelector("#shareButton").addEventListener("click", async () => {
   if (navigator.share) {
     try {
       await navigator.share({
-        title: "Life Decision Slot Machine",
+        title: "FateSpin -- AI Decision Oracle",
         text: shareText,
       });
       return;
@@ -479,7 +479,7 @@ document.querySelector("#downloadButton").addEventListener("click", () => {
 
   const canvas = drawShareCard(latestResult);
   const link = document.createElement("a");
-  link.download = "life-decision-slot-machine-result.png";
+  link.download = "fatespin-result.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 });
@@ -615,7 +615,7 @@ function renderResult(data) {
 
 function formatShareText(data) {
   return [
-    `Life Decision Slot Machine says: ${titleCaseAction(data.verdict)}`,
+    `FateSpin says: ${titleCaseAction(data.verdict)}`,
     `Decision: ${data.decision}`,
     `Reason: ${data.stats}`,
   ].join("\n");
@@ -638,7 +638,7 @@ function drawShareCard(data) {
 
   ctx.fillStyle = "#f0b94a";
   ctx.font = "bold 42px Arial";
-  ctx.fillText("LIFE DECISION SLOT MACHINE", 166, 210);
+  ctx.fillText("FATESPIN", 166, 210);
 
   ctx.fillStyle = "#f7f1dc";
   ctx.font = "bold 86px Arial";
@@ -660,7 +660,7 @@ function drawShareCard(data) {
   ctx.fillRect(166, 1130, 420, 86);
   ctx.fillStyle = "#f7f1dc";
   ctx.font = "bold 34px Arial";
-  ctx.fillText("Shareable nonsense", 198, 1184);
+  ctx.fillText("fatespin.app", 198, 1184);
 
   return canvas;
 }
