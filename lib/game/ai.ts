@@ -8,17 +8,26 @@ const MAX_RETRIES = 4;
 
 function getClient(): OpenAI {
   loadRootDotEnv();
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not configured');
-  return new OpenAI({
-    apiKey,
-    baseURL: 'https://api.groq.com/openai/v1',
-  });
+  const provider = (process.env.AI_PROVIDER || '').toLowerCase();
+  const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+
+  if (!apiKey) throw new Error('AI_API_KEY is not configured');
+
+  if (provider === 'groq' || (!process.env.AI_API_KEY && process.env.GROQ_API_KEY)) {
+    return new OpenAI({
+      apiKey,
+      baseURL: 'https://api.groq.com/openai/v1',
+    });
+  }
+
+  return new OpenAI({ apiKey });
 }
 
 function getModel(): string {
   loadRootDotEnv();
-  return process.env.AI_MODEL || 'llama-3.3-70b-versatile';
+  const provider = (process.env.AI_PROVIDER || '').toLowerCase();
+  if (process.env.AI_MODEL) return process.env.AI_MODEL;
+  return provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gpt-4.1-mini';
 }
 
 export async function generateFirstTurn(state: GameState): Promise<AIResponse> {
@@ -110,8 +119,8 @@ export async function callAI(userPrompt: string, state?: GameState): Promise<AIR
 export async function checkAIHealth(): Promise<{ healthy: boolean; error?: string }> {
   try {
     loadRootDotEnv();
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return { healthy: false, error: 'GROQ_API_KEY not configured' };
+    const apiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+    if (!apiKey) return { healthy: false, error: 'AI_API_KEY not configured' };
 
     const client = getClient();
     await client.chat.completions.create({

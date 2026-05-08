@@ -26,31 +26,37 @@ function parseEnvValue(rawValue: string) {
 }
 
 export function loadRootDotEnv() {
-  const envPath = path.join(process.cwd(), '.env');
-  if (!fs.existsSync(envPath)) {
+  const envPaths = [
+    path.join(process.cwd(), '.env'),
+    path.join(process.cwd(), '.env.local'),
+  ].filter((envPath) => fs.existsSync(envPath));
+
+  if (envPaths.length === 0) {
     global.__parallelYouEnvLoadedAt = Date.now();
     return;
   }
 
-  const stats = fs.statSync(envPath);
-  if (global.__parallelYouEnvLoadedAt && global.__parallelYouEnvLoadedAt >= stats.mtimeMs) return;
+  const newestMtime = Math.max(...envPaths.map((envPath) => fs.statSync(envPath).mtimeMs));
+  if (global.__parallelYouEnvLoadedAt && global.__parallelYouEnvLoadedAt >= newestMtime) return;
 
-  const contents = fs.readFileSync(envPath, 'utf8');
-  for (const line of contents.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
+  for (const envPath of envPaths) {
+    const contents = fs.readFileSync(envPath, 'utf8');
+    for (const line of contents.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
 
-    const separatorIndex = trimmed.indexOf('=');
-    if (separatorIndex <= 0) continue;
+      const separatorIndex = trimmed.indexOf('=');
+      if (separatorIndex <= 0) continue;
 
-    const key = trimmed.slice(0, separatorIndex).trim();
-    if (!key) continue;
+      const key = trimmed.slice(0, separatorIndex).trim();
+      if (!key) continue;
 
-    const value = parseEnvValue(trimmed.slice(separatorIndex + 1));
-    process.env[key] = value;
+      const value = parseEnvValue(trimmed.slice(separatorIndex + 1));
+      process.env[key] = value;
+    }
   }
 
-  global.__parallelYouEnvLoadedAt = stats.mtimeMs;
+  global.__parallelYouEnvLoadedAt = newestMtime;
 }
 
 loadRootDotEnv();
