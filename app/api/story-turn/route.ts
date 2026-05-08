@@ -5,6 +5,22 @@ import { createInitialState, normalizeGameState, SOFT_CHOICE_CAP } from '@/lib/g
 import { buildEndingPrompt } from '@/lib/game/ending';
 import { validatePlayerProfile } from '@/lib/game/validators';
 import { GameState, AIResponse, StoryTurnRequest } from '@/lib/game/types';
+import { generateFallbackOpening, generateFallbackTurn } from '@/lib/game/fallback';
+
+const AI_TIMEOUT_MS = 12000;
+
+async function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), AI_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +33,11 @@ export async function POST(req: NextRequest) {
       }
 
       const state = createInitialState(body.playerProfile);
-      const aiResponse = await generateFirstTurn(state);
+      const aiResponse = await withTimeout(generateFirstTurn(state), 'Opening scene generation')
+        .catch((err) => {
+          console.warn('Using fallback opening:', err instanceof Error ? err.message : err);
+          return generateFallbackOpening(state);
+        });
       const newState = applyAIResponse(state, aiResponse);
 
       return NextResponse.json({ success: true, gameState: newState });
@@ -54,7 +74,13 @@ export async function POST(req: NextRequest) {
         callbackResolutions: rawParsed.callbackResolutions || null,
       };
     } else {
-      aiResponse = await generateTurn(state, body.choiceId, body.choiceText, body.isForcedContinue);
+      aiResponse = await withTimeout(
+        generateTurn(state, body.choiceId, body.choiceText, body.isForcedContinue),
+        'Story turn generation'
+      ).catch((err) => {
+        console.warn('Using fallback turn:', err instanceof Error ? err.message : err);
+        return generateFallbackTurn(state, body.choiceText);
+      });
     }
 
     const newState = applyAIResponse(state, aiResponse, body.choiceId, body.choiceText);
