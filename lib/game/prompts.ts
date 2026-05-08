@@ -1,6 +1,23 @@
 import { GameState } from './types';
 import { getChoiceBudgetForAge, getYearJumpForAge, HARD_CHOICE_CAP, MAX_ENDING_AGE, MIN_ENDING_AGE, SOFT_CHOICE_CAP } from './state';
 
+function formatStoryPreferences(profile: GameState['playerProfile']): string {
+  const prefs = profile.storyPreferences;
+  if (!prefs) return 'No selected story ingredients yet.';
+
+  const line = (label: string, values?: string[]) => `${label}: ${values && values.length > 0 ? values.join(', ') : 'none selected'}`;
+
+  return [
+    line('People who may matter', prefs.importantPeople),
+    line('Behavior patterns to notice', prefs.behaviorPatterns),
+    line('Small things they like', prefs.likes),
+    line('Things that drain them', prefs.dislikes),
+    line('Pressure sources', prefs.pressureSources),
+    line('Support they respond to', prefs.supportStyle),
+    line('Preferred story vibe', prefs.storyVibe),
+  ].join('\n');
+}
+
 export function buildSystemPrompt(): string {
   return `You write DIRECT YOUR LIFE, a first-person life story game.
 
@@ -36,6 +53,9 @@ Rules:
 - No explaining the player's feelings. Show what they do with their hands, phone, face, money, room, work, family.
 - Be concrete. Not "a message" - "Dani's Slack". Not "your work" - "the deck due Friday".
 - If something sounds polished, make it more normal.
+- Use the player's selected story ingredients. Bring in their people, habits, likes, dislikes, pressure, and preferred vibe as real details.
+- Do not list those ingredients back. Turn them into scenes: a person calling, a disliked pressure interrupting, a liked object on the desk, a familiar habit repeating.
+- Make choices clearly connected to what just happened. The player should understand why each choice exists and what kind of life it might open or close.
 
 CHOICE RULES:
 Choices should be major life decisions, not errands, tactics, or small social moves.
@@ -118,10 +138,12 @@ LIFE: ${profile.lifeHistory}
 WANTS: ${profile.goals}
 AFRAID OF: ${profile.fears}
 STRUGGLES WITH: ${profile.emotionalStruggles}
+STORY INGREDIENTS:
+${formatStoryPreferences(profile)}
 
 Open with a specific moment in this person's life. Not a summary. Something happening right now.
 Make it sound normal, like a person telling the truth without trying to sound profound.
-Give 3-4 choices that feel specific to who they are and big enough to alter the next several years.
+Give 3-4 choices that feel specific to who they are, their selected details, and big enough to alter the next several years.
 Remember: this story spans decades, so start concrete but leave room for time to move fast later.`;
 }
 
@@ -136,6 +158,7 @@ export function buildTurnPrompt(state: GameState, choiceId?: string, choiceText?
   const closesOutYear = Boolean(choiceId) && projectedChoicesThisYear >= choiceBudget;
 
   let prompt = `Scene #${sceneNum + 1}. Phase: ${phase}. Player: ${state.playerProfile.name}, age ${currentAge}, ${state.playerProfile.country}.\n`;
+  prompt += `STORY INGREDIENTS:\n${formatStoryPreferences(state.playerProfile)}\n`;
   prompt += `LIFETIME PACING: ${totalChoices}/${HARD_CHOICE_CAP} choices used. This current year has ${state.choicesThisYear}/${choiceBudget} choices used.\n`;
   prompt += `TIME JUMP RULE: after this major decision, jump ahead about ${yearJump} years and autofill the ordinary life between.\n`;
   prompt += `ENDING WINDOW: do not fully end this life before age ${MIN_ENDING_AGE} unless the hard cap is reached. The story must be heading toward age ${MIN_ENDING_AGE}-${MAX_ENDING_AGE}.\n\n`;

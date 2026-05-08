@@ -1,3 +1,13 @@
+export interface StoryPreferences {
+  importantPeople: string[];
+  behaviorPatterns: string[];
+  likes: string[];
+  dislikes: string[];
+  pressureSources: string[];
+  supportStyle: string[];
+  storyVibe: string[];
+}
+
 export interface PlayerProfile {
   name: string;
   age: number;
@@ -6,6 +16,7 @@ export interface PlayerProfile {
   goals: string;
   fears: string;
   emotionalStruggles: string;
+  storyPreferences?: StoryPreferences;
 }
 
 export interface Scene {

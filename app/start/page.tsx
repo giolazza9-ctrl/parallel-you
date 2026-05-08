@@ -3,9 +3,45 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlayerProfile } from '@/lib/game/types';
+import { PlayerProfile, StoryPreferences } from '@/lib/game/types';
 
-const steps = [
+type TextStepKey = keyof Omit<PlayerProfile, 'storyPreferences'>;
+type SelectStepKey = keyof StoryPreferences;
+type StepColor = 'blue' | 'cyan' | 'emerald' | 'amber' | 'orange' | 'rose' | 'red';
+
+type TextStep = {
+  key: TextStepKey;
+  label: string;
+  placeholder: string;
+  type: 'text' | 'number' | 'textarea';
+  color: StepColor;
+  hint: string;
+};
+
+type SelectStep = {
+  key: SelectStepKey;
+  label: string;
+  placeholder: string;
+  type: 'select';
+  color: StepColor;
+  hint: string;
+  options: string[];
+  maxSelections?: number;
+};
+
+type Step = TextStep | SelectStep;
+
+const emptyStoryPreferences: StoryPreferences = {
+  importantPeople: [],
+  behaviorPatterns: [],
+  likes: [],
+  dislikes: [],
+  pressureSources: [],
+  supportStyle: [],
+  storyVibe: [],
+};
+
+const steps: Step[] = [
   { key: 'name', label: 'What should the story call you?', placeholder: 'Your name', type: 'text', color: 'blue', hint: 'This becomes the first spark in the room.' },
   { key: 'age', label: 'How many years have shaped you?', placeholder: 'Your age', type: 'number', color: 'cyan', hint: 'The pace adapts to where you are in life.' },
   { key: 'country', label: 'Where does your weather come from?', placeholder: 'Country', type: 'text', color: 'emerald', hint: 'Location helps the story imagine your horizon.' },
@@ -13,9 +49,77 @@ const steps = [
   { key: 'goals', label: 'What do you want badly enough to admit?', placeholder: 'Not what you should want. What you actually want.', type: 'textarea', color: 'orange', hint: 'Ambition brightens the palette.' },
   { key: 'fears', label: 'Which shadow follows you closest?', placeholder: 'The real fears. Not spiders.', type: 'textarea', color: 'rose', hint: 'Naming fear gives the interface something to push against.' },
   { key: 'emotionalStruggles', label: 'Where do your emotions snag?', placeholder: "What keeps you up. What you don't say out loud.", type: 'textarea', color: 'red', hint: 'The final shape comes from what resists language.' },
-] as const;
-
-type StepKey = typeof steps[number]['key'];
+  {
+    key: 'importantPeople',
+    label: 'Who should matter in this version of your life?',
+    placeholder: '',
+    type: 'select',
+    color: 'blue',
+    hint: 'Pick the people the story should be allowed to bring into the room.',
+    maxSelections: 3,
+    options: ['Mother or father', 'Sibling', 'Best friend', 'Old friend', 'Partner', 'Ex', 'Mentor', 'Stranger who helps', 'Someone who doubts you'],
+  },
+  {
+    key: 'behaviorPatterns',
+    label: 'What do you usually do when life gets loud?',
+    placeholder: '',
+    type: 'select',
+    color: 'cyan',
+    hint: 'These choices become patterns the story can notice and challenge later.',
+    maxSelections: 3,
+    options: ['Overthink', 'Disappear for a while', 'Start strong then stop', 'Work late', 'Ask for help', 'Pretend I am fine', 'Make jokes', 'Try again quietly', 'Compare myself to others'],
+  },
+  {
+    key: 'likes',
+    label: 'What small things make a day feel better?',
+    placeholder: '',
+    type: 'select',
+    color: 'emerald',
+    hint: 'Ordinary details make the story feel like it happened somewhere real.',
+    maxSelections: 4,
+    options: ['Night walks', 'Coffee', 'Music in headphones', 'Clean desk', 'Cooking', 'Gym', 'Rain', 'Quiet mornings', 'Long messages', 'Sunlight through curtains'],
+  },
+  {
+    key: 'dislikes',
+    label: 'What instantly drains you?',
+    placeholder: '',
+    type: 'select',
+    color: 'amber',
+    hint: 'The story will use this as pressure, not as a label.',
+    maxSelections: 4,
+    options: ['Being rushed', 'Fake positivity', 'Messy room', 'No replies', 'Family pressure', 'Money stress', 'Being watched', 'Starting over', 'Feeling behind', 'Loud places'],
+  },
+  {
+    key: 'pressureSources',
+    label: 'Where does pressure usually come from?',
+    placeholder: '',
+    type: 'select',
+    color: 'orange',
+    hint: 'Pick the kind of pressure that actually shows up in your life.',
+    maxSelections: 3,
+    options: ['Money', 'Family', 'Time passing', 'Social media', 'Friends moving ahead', 'Work deadlines', 'Health', 'Relationship tension', 'My own expectations'],
+  },
+  {
+    key: 'supportStyle',
+    label: 'What kind of help do you actually respond to?',
+    placeholder: '',
+    type: 'select',
+    color: 'rose',
+    hint: 'Some people need softness. Some need honesty. Most need both at the right time.',
+    maxSelections: 2,
+    options: ['Gentle encouragement', 'Blunt honesty', 'Someone sitting with me', 'A practical push', 'Space to think', 'Someone checking in later'],
+  },
+  {
+    key: 'storyVibe',
+    label: 'How should this story feel?',
+    placeholder: '',
+    type: 'select',
+    color: 'red',
+    hint: 'This sets the camera. The choices still decide what happens.',
+    maxSelections: 2,
+    options: ['Quiet and real', 'Funny but honest', 'Tender', 'Tense', 'Hopeful', 'A little painful', 'Like a late-night film'],
+  },
+];
 
 const stepColors: Record<string, {
   accent: string;
@@ -95,6 +199,7 @@ export default function StartPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [profile, setProfile] = useState<Partial<PlayerProfile>>({});
+  const [storyPreferences, setStoryPreferences] = useState<StoryPreferences>(emptyStoryPreferences);
   const [inputValue, setInputValue] = useState('');
   const [direction, setDirection] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -103,14 +208,18 @@ export default function StartPage() {
   const step = steps[currentStep];
   const colors = stepColors[step.color];
   const completion = ((currentStep + 1) / steps.length) * 100;
-  const energy = Math.min(100, 26 + inputValue.trim().length * 3 + currentStep * 8);
+  const selectedOptions = step.type === 'select' ? storyPreferences[step.key] : [];
+  const canContinue = step.type === 'select' ? selectedOptions.length > 0 : Boolean(inputValue.trim());
+  const energy = Math.min(100, 26 + (step.type === 'select' ? selectedOptions.length * 18 : inputValue.trim().length * 3) + currentStep * 5);
 
   const previewProfile = useMemo(
     () => ({
       ...profile,
-      [step.key]: step.key === 'age' ? Number(inputValue || 0) || '' : inputValue,
+      ...(step.type === 'select'
+        ? { storyPreferences }
+        : { [step.key]: step.key === 'age' ? Number(inputValue || 0) || '' : inputValue }),
     }),
-    [profile, step.key, inputValue]
+    [profile, step, inputValue, storyPreferences]
   );
 
   const collectedInsights = [
@@ -118,15 +227,30 @@ export default function StartPage() {
     previewProfile.country ? `Origin: ${previewProfile.country}` : null,
     previewProfile.goals ? `Pull: ${String(previewProfile.goals).slice(0, 28)}${String(previewProfile.goals).length > 28 ? '...' : ''}` : null,
     previewProfile.fears ? `Shadow: ${String(previewProfile.fears).slice(0, 28)}${String(previewProfile.fears).length > 28 ? '...' : ''}` : null,
+    storyPreferences.behaviorPatterns.length ? `Pattern: ${storyPreferences.behaviorPatterns[0]}` : null,
+    storyPreferences.storyVibe.length ? `Camera: ${storyPreferences.storyVibe.join(', ')}` : null,
   ].filter(Boolean) as string[];
+
+  const togglePreference = (key: SelectStepKey, option: string, maxSelections = 3) => {
+    setStoryPreferences((current) => {
+      const existing = current[key];
+      const next = existing.includes(option)
+        ? existing.filter((item) => item !== option)
+        : existing.length >= maxSelections
+          ? [...existing.slice(1), option]
+          : [...existing, option];
+
+      return { ...current, [key]: next };
+    });
+  };
 
   const handleNext = () => {
     if (loading) return;
-    if (!inputValue.trim()) return;
+    if (!canContinue) return;
 
-    const key = step.key as StepKey;
-    const value = key === 'age' ? parseInt(inputValue, 10) || 0 : inputValue;
-    const newProfile = { ...profile, [key]: value };
+    const newProfile = step.type === 'select'
+      ? profile
+      : { ...profile, [step.key]: step.key === 'age' ? parseInt(inputValue, 10) || 0 : inputValue };
     setProfile(newProfile);
 
     if (currentStep < steps.length - 1) {
@@ -134,7 +258,7 @@ export default function StartPage() {
       setInputValue('');
       setCurrentStep(currentStep + 1);
     } else {
-      startGame(newProfile as PlayerProfile);
+      startGame({ ...(newProfile as PlayerProfile), storyPreferences });
     }
   };
 
@@ -164,14 +288,14 @@ export default function StartPage() {
     if (loading) return;
     if (currentStep > 0) {
       setDirection(-1);
-      const prevKey = steps[currentStep - 1].key as StepKey;
-      setInputValue(String(profile[prevKey] || ''));
+      const prevStep = steps[currentStep - 1];
+      setInputValue(prevStep.type === 'select' ? '' : String(profile[prevStep.key] || ''));
       setCurrentStep(currentStep - 1);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && step.type !== 'textarea') {
+    if (e.key === 'Enter' && !e.shiftKey && step.type !== 'textarea' && step.type !== 'select') {
       e.preventDefault();
       handleNext();
     }
@@ -294,7 +418,27 @@ export default function StartPage() {
                     <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300/72">{step.hint}</p>
 
                     <div className={`mt-8 rounded-[28px] border ${colors.border} ${colors.panel} p-4 md:p-5`}>
-                      {step.type === 'textarea' ? (
+                      {step.type === 'select' ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {step.options.map((option) => {
+                            const active = selectedOptions.includes(option);
+                            return (
+                              <button
+                                key={option}
+                                type="button"
+                                onClick={() => togglePreference(step.key, option, step.maxSelections)}
+                                className={`rounded-2xl border px-4 py-3 text-left text-sm leading-6 transition-all ${
+                                  active
+                                    ? 'border-white/35 bg-white/18 text-white shadow-[0_0_24px_rgba(255,255,255,0.08)]'
+                                    : 'border-white/10 bg-black/10 text-slate-300/82 hover:border-white/22 hover:bg-white/8 hover:text-white'
+                                }`}
+                              >
+                                {option}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : step.type === 'textarea' ? (
                         <textarea
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
@@ -343,7 +487,7 @@ export default function StartPage() {
                     <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Energy {energy}%</p>
                     <motion.button
                       onClick={handleNext}
-                      disabled={!inputValue.trim() || loading}
+                      disabled={!canContinue || loading}
                       whileHover={{ scale: 1.03, y: -1 }}
                       whileTap={{ scale: 0.98 }}
                       className={`rounded-full bg-gradient-to-r ${colors.accent} px-6 py-3 text-sm font-semibold uppercase tracking-[0.28em] text-slate-950 disabled:cursor-not-allowed disabled:opacity-30`}
@@ -406,13 +550,14 @@ export default function StartPage() {
                   <p className={`mt-2 text-lg ${colors.accentText}`}>{step.label}</p>
                 </div>
                 <div className={`rounded-full bg-white/8 px-3 py-2 text-xs uppercase tracking-[0.24em] ${colors.accentText}`}>
-                  {inputValue.trim().length} chars
+                  {step.type === 'select' ? `${selectedOptions.length} picked` : `${inputValue.trim().length} chars`}
                 </div>
               </div>
 
               <div className="mt-8 grid grid-cols-3 gap-3">
                 {Array.from({ length: 9 }).map((_, i) => {
-                  const active = i < Math.max(1, Math.min(9, Math.ceil((inputValue.trim().length || currentStep + 1) / 4)));
+                  const activeCount = step.type === 'select' ? selectedOptions.length * 2 + 1 : Math.ceil((inputValue.trim().length || currentStep + 1) / 4);
+                  const active = i < Math.max(1, Math.min(9, activeCount));
                   return (
                     <motion.div
                       key={i}
@@ -427,7 +572,7 @@ export default function StartPage() {
 
             <div className="mt-6 grid gap-3">
               {steps.map((s, i) => {
-                const storedValue = previewProfile[s.key as StepKey];
+                const storedValue = s.type === 'select' ? storyPreferences[s.key].join(', ') : previewProfile[s.key];
                 const active = i === currentStep;
                 return (
                   <div

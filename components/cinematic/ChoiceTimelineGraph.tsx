@@ -58,7 +58,7 @@ export default function ChoiceTimelineGraph({
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className={`text-xs uppercase tracking-[0.24em] ${accentClass} opacity-60`}>Life graph</p>
-          <h3 className="font-display mt-2 text-2xl text-white">{playerName}'s timeline</h3>
+          <h3 className="font-display mt-2 text-2xl text-white">{playerName}&apos;s timeline</h3>
         </div>
         <button
           onClick={shareTimeline}
